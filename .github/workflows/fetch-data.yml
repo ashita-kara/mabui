@@ -1,0 +1,56 @@
+name: fetch-data
+
+on:
+  schedule:
+    # 財務省の週次証券売買：原則 木曜 8:50 JST 公表（祝日などで金曜の週あり）→ 木・金 9:30 JST
+    - cron: "30 0 * * 4,5"
+    # ECB 参照レート：営業日 16:00 CET ごろ公表 → 月〜金 17:00 UTC（夏時間でも公表後）
+    - cron: "0 17 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fetch-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # どちらも「変化がなければ何も保存しない」ので、毎回両方を実行してよい。
+      # 片方が失敗しても、もう片方は保存する。
+      - name: MOF weekly securities transactions
+        id: mof
+        continue-on-error: true
+        run: python scripts/mof_itn_weekly.py all
+
+      - name: ECB reference rates
+        id: ecb
+        continue-on-error: true
+        run: python scripts/ecb_exr_daily.py all
+
+      - name: Commit if changed
+        run: |
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "data: update ($(date -u +%Y-%m-%dT%H:%MZ))"
+            git push
+          fi
+
+      - name: Fail if any source failed
+        if: steps.mof.outcome == 'failure' || steps.ecb.outcome == 'failure'
+        run: |
+          echo "mof=${{ steps.mof.outcome }} ecb=${{ steps.ecb.outcome }}"
+          exit 1
