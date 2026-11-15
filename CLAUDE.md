@@ -41,10 +41,12 @@
   公表値は文字列のまま残す（ECB の条件：改変しない）。円ドルは MABUI の計算列として分けている。
   ECB の API は TLS チェーンが不完全なので `scripts/certs/extra_intermediates.pem` で補っている（検証は切らない）。
 - 定期実行：`.github/workflows/fetch-data.yml`。
-- GitHub：使うアカウントは ashita.tools（ma-san-do は過去のもので使わない。この Mac の SSH 鍵は ma-san-do のもの）。
-  push は gh の認証（HTTPS）で行う。コミット作者は git の global 設定のまま。
+- GitHub：公開リポジトリ https://github.com/ashita-kara/mabui （アカウント ashita-kara）。
+  ma-san-do は過去のアカウントで使わない（この Mac の SSH 鍵は ma-san-do のもの）。push は gh の認証（HTTPS）。
+  コミット作者は git の global 設定のまま。
+- 2026-11-15 に Actions を手動実行して成功（Ubuntu でも ECB の TLS が通る。raw から再加工して差分なし＝再現できる）。
 
 ## 次にやること
-1. GitHub に公開リポジトリ mabui を作り、push して Actions が動くか確かめる（特に ECB の TLS が Ubuntu で通るか）。
+1. 定期実行が実際に動いたか、最初の木曜・平日の実行結果を確認する。
 2. 円目線とドル目線を比べる画像か30秒動画を1本作り、X に投稿して反応を見る。
 3. 必要なら FRB H.10（円ドルの公表値）を加える。
