@@ -1,0 +1,12 @@
+{
+  "source_id": "mof_fdi_by_country",
+  "file": "20261116T043335Z_fdi2020.xlsx",
+  "retrieved_at": "2026-11-16T04:33:35Z",
+  "sha256": "219160c169bb8c13bd54f0c8dbe336c905726d97ce69ba59248f9dfdd37dc37c",
+  "bytes": 90091,
+  "url": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/revised/fdi2020.xlsx",
+  "page": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/bpfdii.htm",
+  "year": 2020,
+  "http_last_modified": "Wed, 10 May 2023 22:50:37 GMT",
+  "http_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+}

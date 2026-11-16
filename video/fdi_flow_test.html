@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>MABUI — 流れの試作</title>
+<style>html,body{margin:0;background:#05070b}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// 流れの試作（16秒）。日本からの直接投資（ネット、年次）を、日本から各国へ飛ぶ光の粒で描く。
+// 1粒＝100億円。その年の間に、その年の額の分だけ粒が飛び立つ。回収が上回った国からは青い粒が日本へ戻る。
+// 粒の位置は「いつ飛び立ったか」と経過時間だけで決まる（状態を持たない）ので、どの時刻でも同じ絵になる。
+const W = 1920, H = 1080, DURATION = 16;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const FONT = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+const BG = '#05070b', TEXT = '#e9eef3', SUB = '#8a98a8';
+const OUT = [255, 196, 110], BACK = [110, 170, 255];
+const MAP = { cx: 960, lon0: 150, k: 5.0, top: 520, tilt: 0.62, latTop: 84 };
+const JAPAN = { lon: 138.5, lat: 36.5 };
+const OKU_PER_DOT = 100;
+const T0 = 1.2, YEAR_LEN = 2.3, FLIGHT = 1.5;   // 1年＝2.3秒、粒の飛行時間1.5秒
+
+let D = null;
+const SHORT = { CHN: '中国', USA: 'アメリカ', GBR: '英国', KOR: '韓国', ZAF: '南アフリカ' };
+const FOCUS = new Set(['CHN', 'IND']);
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = k => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+const ramp = (t, a, b) => ease((t - a) / (b - a));
+const hash = (a, b) => { const h = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453; return h - Math.floor(h); };
+
+function proj(lon, lat) {
+  let d = lon - MAP.lon0; while (d < -180) d += 360; while (d > 180) d -= 360;
+  return [MAP.cx + d * MAP.k, MAP.top + (MAP.latTop - lat) * MAP.k * MAP.tilt];
+}
+
+function setData(d) {
+  D = d;
+  [D.jx, D.jy] = proj(JAPAN.lon, JAPAN.lat);
+  D.landXY = D.land.map(([lo, la]) => proj(lo, la));
+  D.countries.forEach((c, ci) => {
+    [c.x, c.y] = proj(c.lon, c.lat); c.ci = ci;
+    const dist = Math.hypot(c.x - D.jx, c.y - D.jy);
+    // 弧の頂点（距離に応じて持ち上げる）
+    c.cx = (c.x + D.jx) / 2; c.cy = (c.y + D.jy) / 2 - Math.min(260, dist * 0.32);
+  });
+}
+
+function bez(c, p) {   // p=0 日本、p=1 相手国
+  const q = 1 - p;
+  return [q * q * D.jx + 2 * q * p * c.cx + p * p * c.x, q * q * D.jy + 2 * q * p * c.cy + p * p * c.y];
+}
+
+const yearIndexAt = t => clamp(Math.floor((t - T0) / YEAR_LEN), 0, D.years.length - 1);
+
+function text(s, x, y, size, color, weight = 400, align = 'left', alpha = 1) {
+  if (alpha <= 0.001 || !s) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${FONT}`;
+  ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); ctx.restore();
+}
+const fmt = v => Math.abs(v) >= 1e4 ? `${(v / 1e4).toFixed(2)}兆円` : `${Math.round(v).toLocaleString('ja-JP')}億円`;
+
+function renderAt(t) {
+  const appear = ramp(t, 0, 1);
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = `rgba(120,140,165,${0.24 * appear})`;
+  for (const [x, y] of D.landXY) { ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
+
+  // 粒：各年 k、各国 c について、その年の窓の中で飛び立った粒のうち、まだ飛んでいるもの
+  ctx.globalCompositeOperation = 'lighter';
+  const arrive = new Map();
+  for (let k = 0; k < D.years.length; k++) {
+    const y = D.years[k], ws = T0 + k * YEAR_LEN;
+    if (t < ws || t > ws + YEAR_LEN + FLIGHT) continue;
+    for (const c of D.countries) {
+      const v = c.net_oku[y];
+      if (v == null || v === 0) continue;
+      const n = Math.max(1, Math.round(Math.abs(v) / OKU_PER_DOT));
+      const lastA = Math.abs(v) < OKU_PER_DOT ? Math.abs(v) / OKU_PER_DOT : 1; // 100億円未満は薄い1粒
+      const col = v > 0 ? OUT : BACK;
+      for (let i = 0; i < n; i++) {
+        const te = ws + (i + hash(i, c.ci + k * 1000)) / n * YEAR_LEN;   // 飛び立つ時刻
+        const age = t - te;
+        if (age < 0 || age > FLIGHT) continue;
+        let p = ease(age / FLIGHT);
+        if (v < 0) p = 1 - p;                                           // 回収：相手国→日本
+        const a = Math.sin(Math.PI * clamp(age / FLIGHT)) * (n === 1 ? lastA : 1) * (FOCUS.has(c.iso3) ? 1 : 0.38);
+        const off = (hash(c.ci, i) - 0.5) * 10;                         // 束の太さ（飾り）
+        for (let s = 0; s < 3; s++) {                                   // 短い尾
+          const ps = v > 0 ? Math.max(0, p - s * 0.012) : Math.min(1, p + s * 0.012);
+          const [x, yy] = bez(c, ps);
+          ctx.fillStyle = `rgba(${col},${(s ? 0.25 : 0.9) * a})`;
+          ctx.beginPath(); ctx.arc(x + off * Math.sin(Math.PI * ps), yy + off * Math.sin(Math.PI * ps) * 0.5, s ? 1.4 : 1.9, 0, 7); ctx.fill();
+        }
+        if (age > FLIGHT * 0.85) arrive.set(c.iso3, (arrive.get(c.iso3) || 0) + 1);
+      }
+    }
+  }
+  // 着いた所が少し光る
+  for (const c of D.countries) {
+    const m = arrive.get(c.iso3); if (!m) continue;
+    ctx.fillStyle = `rgba(${OUT},${Math.min(0.5, 0.05 * m)})`;
+    ctx.beginPath(); ctx.arc(c.x, c.y, 4 + Math.min(14, Math.sqrt(m) * 2), 0, 7); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  // 日本
+  ctx.save(); ctx.globalAlpha = appear; ctx.strokeStyle = 'rgba(233,238,243,0.9)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(D.jx, D.jy, 16, 10, 0, 0, 7); ctx.stroke(); ctx.restore();
+  text('日本', D.jx, D.jy + 30, 22, TEXT, 700, 'center', appear);
+
+  // その年の上位の国と、中国・インドのラベル
+  const k = yearIndexAt(t), y = D.years[k], la = appear * ramp(t, T0, T0 + 0.6);
+  const pick = new Set(['CHN', 'IND']);
+  [...D.countries].filter(c => c.net_oku[y] != null).sort((a, b) => Math.abs(b.net_oku[y]) - Math.abs(a.net_oku[y]))
+    .slice(0, 5).forEach(c => pick.add(c.iso3));
+  const placed = [];
+  for (const c of D.countries.filter(c => pick.has(c.iso3))) {
+    const v = c.net_oku[y]; if (v == null) continue;
+    let lx = c.x + 12, ly = c.y + 26;
+    for (let g = 0; g < 30 && placed.some(q => lx < q.x + 200 && lx + 200 > q.x && Math.abs(ly - q.y) < 46); g++) ly += 46;
+    placed.push({ x: lx, y: ly });
+    const hl = c.iso3 === 'CHN' || c.iso3 === 'IND';
+    text(SHORT[c.iso3] || c.name_ja, lx, ly, hl ? 22 : 19, TEXT, 700, 'left', la * (hl ? 1 : 0.7));
+    text(fmt(v), lx, ly + 22, hl ? 20 : 17, v >= 0 ? `rgb(${OUT})` : `rgb(${BACK})`, 700, 'left', la * (hl ? 1 : 0.7));
+  }
+
+  // 見出し
+  text('日本の企業のお金は、どこへ向かった？', 70, 70, 34, SUB, 400, 'left', appear);
+  text(`${y}年`, 70, 140, 64, TEXT, 700, 'left', la);
+  const chn = D.countries.find(c => c.iso3 === 'CHN').net_oku[y], ind = D.countries.find(c => c.iso3 === 'IND').net_oku[y];
+  text(`中国へ　${fmt(chn)}`, 70, 215, 36, TEXT, 700, 'left', la);
+  text(`インドへ　${fmt(ind)}`, 70, 262, 36, `rgb(${OUT})`, 700, 'left', la);
+
+  drawChart(t, la);
+
+  text('直接投資（海外に会社や工場をつくる・買うなどのお金）。光の粒1つ＝100億円（その年の投資額−回収額）。日本へ戻る青い粒は、回収が投資を上回った国', 70, 1000, 19, SUB, 400, 'left', appear);
+  text('国は直接の投資先（地域統括会社などを経由した分は、最終の事業地と異なることがある）。秘匿（X）の値は描いていない', 70, 1026, 19, SUB, 400, 'left', appear);
+  text('出典：財務省・日本銀行「対外・対内直接投資（地域別・業種別）」を加工して作成　地図：Natural Earth', 70, 1052, 17, '#6b7886', 400, 'left', appear);
+  text('試作', W - 50, 1052, 17, '#55606c', 400, 'right', appear);
+}
+
+// 右上：中国とインドの折れ線（その年まで描く）
+function drawChart(t, alpha) {
+  const X0 = 1300, X1 = 1820, Y0 = 290, Y1 = 90, MAXV = 1.4e4;
+  const n = D.years.length, xs = i => X0 + (X1 - X0) * i / (n - 1), ys = v => Y0 - (Y0 - Y1) * clamp(v / MAXV);
+  const prog = clamp((t - T0) / YEAR_LEN, 0, n - 1);  // 何年目まで描くか（小数）。地図の年とそろえる
+  ctx.save(); ctx.globalAlpha = alpha;
+  ctx.strokeStyle = 'rgba(138,152,168,0.35)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(X0, Y0); ctx.lineTo(X1, Y0); ctx.stroke();
+  D.years.forEach((y, i) => text(String(y), xs(i), Y0 + 20, 15, SUB, 400, 'center', alpha));
+  text('日本からの直接投資（兆円）', X0, Y1 - 30, 17, SUB, 400, 'left', alpha);
+  for (const [iso, col, name] of [['CHN', [233, 238, 243], '中国'], ['IND', OUT, 'インド']]) {
+    const c = D.countries.find(c => c.iso3 === iso);
+    ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 3; ctx.beginPath();
+    let lx = 0, ly = 0;
+    for (let i = 0; i <= Math.floor(prog); i++) {
+      const v = c.net_oku[D.years[i]] || 0; lx = xs(i); ly = ys(v);
+      i ? ctx.lineTo(lx, ly) : ctx.moveTo(lx, ly);
+    }
+    const i0 = Math.floor(prog), f = prog - i0;
+    if (i0 < n - 1 && f > 0) {
+      const a = c.net_oku[D.years[i0]] || 0, b = c.net_oku[D.years[i0 + 1]] || 0;
+      lx = xs(i0 + f); ly = ys(a + (b - a) * f); ctx.lineTo(lx, ly);
+    }
+    ctx.stroke();
+    ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.arc(lx, ly, 5, 0, 7); ctx.fill();
+    text(name, lx + 10, ly - 14, 18, `rgb(${col})`, 700, 'left', alpha);
+  }
+  ctx.restore();
+}
+
+window.setData = setData; window.renderAt = renderAt; window.DURATION = DURATION;
+</script>
+</body>
+</html>

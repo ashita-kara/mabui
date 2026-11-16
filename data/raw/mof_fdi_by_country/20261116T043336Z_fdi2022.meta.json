@@ -1,0 +1,12 @@
+{
+  "source_id": "mof_fdi_by_country",
+  "file": "20261116T043336Z_fdi2022.xlsx",
+  "retrieved_at": "2026-11-16T04:33:36Z",
+  "sha256": "e56f9c8f4b2a37c939fe6764feee3706e557c595f6d436e96645d181d7f44faa",
+  "bytes": 98638,
+  "url": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/revised/fdi2022.xlsx",
+  "page": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/bpfdii.htm",
+  "year": 2022,
+  "http_last_modified": "Sun, 11 May 2025 22:50:56 GMT",
+  "http_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+}

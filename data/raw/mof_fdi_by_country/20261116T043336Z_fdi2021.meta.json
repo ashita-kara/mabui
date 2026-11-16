@@ -1,0 +1,12 @@
+{
+  "source_id": "mof_fdi_by_country",
+  "file": "20261116T043336Z_fdi2021.xlsx",
+  "retrieved_at": "2026-11-16T04:33:36Z",
+  "sha256": "7f301f8fe595dd2c6a5866fa4ffef4254214ec066be840f3a20c9661f688dde2",
+  "bytes": 103729,
+  "url": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/revised/fdi2021.xlsx",
+  "page": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/bpfdii.htm",
+  "year": 2021,
+  "http_last_modified": "Thu, 09 May 2024 22:50:39 GMT",
+  "http_content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+}

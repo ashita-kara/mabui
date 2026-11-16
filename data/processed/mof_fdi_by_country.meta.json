@@ -1,0 +1,119 @@
+{
+  "source_id": "mof_fdi_by_country",
+  "title_ja": "対外・対内直接投資（国別・業種別、年次）",
+  "publisher": "日本銀行・財務省（財務省ホームページに掲載）",
+  "source_page": "https://www.mof.go.jp/policy/international_policy/reference/balance_of_payments/bpfdii.htm",
+  "license": "公共データ利用規約（第1.0版）(PDL1.0)",
+  "attribution": "出典：財務省・日本銀行「対外・対内直接投資（地域別・業種別）」を加工して作成",
+  "unit": "100 million JPY (億円), net (実行−回収), calendar year",
+  "principle": "親子関係原則（directional principle）。国際収支統計の直接投資（資産負債原則）とは一致しない",
+  "status_codes": {
+    "ok": "数値",
+    "confidential": "X（報告3件未満で秘匿）",
+    "none": "．（該当なし）",
+    "blank": "空欄"
+  },
+  "years": [
+    2020,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "snapshots_used": {
+    "2020": "20261116T043335Z_fdi2020.xlsx",
+    "2021": "20261116T043336Z_fdi2021.xlsx",
+    "2022": "20261116T043336Z_fdi2022.xlsx",
+    "2023": "20261116T043336Z_fdi2023.xlsx",
+    "2024": "20261116T043337Z_fdi2024.xlsx",
+    "2025": "20261116T043337Z_fdi2025.xlsx"
+  },
+  "world_vs_listed": [
+    {
+      "year": 2020,
+      "direction": "outward",
+      "world_total": 106463.00892004,
+      "sum_of_listed_countries": 106463.0,
+      "not_listed_or_confidential": -0.0
+    },
+    {
+      "year": 2020,
+      "direction": "inward",
+      "world_total": 12565.47420988,
+      "sum_of_listed_countries": 12565.5,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2021,
+      "direction": "outward",
+      "world_total": 229370.54862199,
+      "sum_of_listed_countries": 229370.5,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2021,
+      "direction": "inward",
+      "world_total": 37639.16895025,
+      "sum_of_listed_countries": 37639.2,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2022,
+      "direction": "outward",
+      "world_total": 213339.93459281,
+      "sum_of_listed_countries": 213339.9,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2022,
+      "direction": "inward",
+      "world_total": 45172.37841502,
+      "sum_of_listed_countries": 45172.4,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2023,
+      "direction": "outward",
+      "world_total": 278667.00170385,
+      "sum_of_listed_countries": 278667.0,
+      "not_listed_or_confidential": -0.0
+    },
+    {
+      "year": 2023,
+      "direction": "inward",
+      "world_total": 29027.77660534,
+      "sum_of_listed_countries": 29027.8,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2024,
+      "direction": "outward",
+      "world_total": 307022.82879034,
+      "sum_of_listed_countries": 307022.8,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2024,
+      "direction": "inward",
+      "world_total": 21650.62019615,
+      "sum_of_listed_countries": 21650.6,
+      "not_listed_or_confidential": 0.0
+    },
+    {
+      "year": 2025,
+      "direction": "outward",
+      "world_total": 278497.94430269,
+      "sum_of_listed_countries": 278497.9,
+      "not_listed_or_confidential": -0.0
+    },
+    {
+      "year": 2025,
+      "direction": "inward",
+      "world_total": 21432.19190126,
+      "sum_of_listed_countries": 21432.2,
+      "not_listed_or_confidential": 0.0
+    }
+  ],
+  "definitions": "sources/mof_fdi_by_country.md"
+}

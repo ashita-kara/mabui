@@ -47,38 +47,7 @@ VALUE_COLS = {
 EXPECTED_HEADER = {13: {4: "株式", 5: "投資ファンド持分", 7: "中長期債", 8: "短期債"}}
 
 # 元データの英語名 → ISO 3166-1 alpha-3（地図に置くため）。未登録の名前が出たら止まる。
-ISO3 = {
-    "Albania": "ALB", "Andorra": "AND", "Angola": "AGO", "Argentina": "ARG", "Armenia": "ARM",
-    "Australia": "AUS", "Austria": "AUT", "Azerbaijan": "AZE", "Bahamas": "BHS", "Bahrain": "BHR",
-    "Bangladesh": "BGD", "Barbados": "BRB", "Belarus": "BLR", "Belgium": "BEL", "Benin": "BEN",
-    "Bermuda": "BMU", "Bolivia": "BOL", "Brazil": "BRA", "British Virgin Islands": "VGB",
-    "Bulgaria": "BGR", "Cameroon": "CMR", "Canada": "CAN", "Cayman Islands": "CYM", "Chile": "CHL",
-    "Colombia": "COL", "Costa Rica": "CRI", "Cote d’Ivoire": "CIV", "Croatia": "HRV", "Cuba": "CUB",
-    "Curacao": "CUW", "Cyprus": "CYP", "Czech": "CZE", "Denmark": "DNK", "Dominican Republic": "DOM",
-    "Ecuador": "ECU", "Egypt": "EGY", "El Salvador": "SLV", "Estonia": "EST", "Ethiopia": "ETH",
-    "Finland": "FIN", "France": "FRA", "Gabon": "GAB", "Germany": "DEU", "Ghana": "GHA",
-    "Gibraltar": "GIB", "Greece": "GRC", "Guatemala": "GTM", "Guernsey": "GGY", "Honduras": "HND",
-    "Hong Kong": "HKG", "Hungary": "HUN", "Iceland": "ISL", "India": "IND", "Indonesia": "IDN",
-    "Iraq": "IRQ", "Ireland": "IRL", "Isle of Man": "IMN", "Israel": "ISR", "Italy": "ITA",
-    "Jamaica": "JAM", "Jersey": "JEY", "Jordan": "JOR", "Kazakhstan": "KAZ", "Kenya": "KEN",
-    "Kuwait": "KWT", "Kyrgyz Republic": "KGZ", "Latvia": "LVA", "Lebanon": "LBN", "Liberia": "LBR",
-    "Liechtenstein": "LIE", "Lithuania": "LTU", "Luxembourg": "LUX", "Macau": "MAC", "Malaysia": "MYS",
-    "Malta": "MLT", "Marshall": "MHL", "Mauritius": "MUS", "Mexico": "MEX", "Mongolia": "MNG",
-    "Montenegro": "MNE", "Morocco": "MAR", "Mozambique": "MOZ", "Namibia": "NAM", "Nepal": "NPL",
-    "Netherlands": "NLD", "New Zealand": "NZL", "Nigeria": "NGA", "North Macedonia": "MKD",
-    "Norway": "NOR", "Oman": "OMN", "Pakistan": "PAK", "Panama": "PAN", "Papua New Guinea": "PNG",
-    "Paraguay": "PRY", "People’s Republic of China": "CHN", "Peru": "PER", "Philippines": "PHL",
-    "Poland": "POL", "Portugal": "PRT", "Puerto Rico": "PRI", "Qatar": "QAT",
-    "Republic of Congo": "COG", "Republic of Korea": "KOR", "Republic of South Africa": "ZAF",
-    "Romania": "ROU", "Russia": "RUS", "Rwanda": "RWA", "Saint Lucia": "LCA", "Saudi Arabia": "SAU",
-    "Senegal": "SEN", "Serbia": "SRB", "Singapore": "SGP", "Slovakia": "SVK", "Slovenia": "SVN",
-    "Spain": "ESP", "Sri Lanka": "LKA", "Suriname": "SUR", "Sweden": "SWE", "Switzerland": "CHE",
-    "Taiwan": "TWN", "Tajikistan": "TJK", "Thailand": "THA", "Togo": "TGO",
-    "Trinidad and Tobago": "TTO", "Tunisia": "TUN", "Turkey": "TUR", "Turkmenistan": "TKM",
-    "Ukraine": "UKR", "United Arab Emirates": "ARE", "United Kingdom": "GBR",
-    "United States Virgin Islands": "VIR", "United States of America": "USA", "Uruguay": "URY",
-    "Uzbekistan": "UZB", "Vanuatu": "VUT", "Venezuela": "VEN", "Viet Nam": "VNM", "Zambia": "ZMB",
-}
+from countries import ISO3  # noqa: E402  共通の対応表
 
 
 class FormatChanged(Exception):

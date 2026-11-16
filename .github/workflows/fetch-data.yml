@@ -45,6 +45,11 @@ jobs:
         continue-on-error: true
         run: python scripts/boj_portfolio_assets_by_country.py all
 
+      - name: MOF/BOJ direct investment by country (annual)
+        id: fdi
+        continue-on-error: true
+        run: python scripts/mof_fdi_by_country.py all
+
       - name: Commit if changed
         run: |
           git add data/
@@ -58,7 +63,7 @@ jobs:
           fi
 
       - name: Fail if any source failed
-        if: steps.mof.outcome == 'failure' || steps.ecb.outcome == 'failure' || steps.boj.outcome == 'failure'
+        if: steps.mof.outcome == 'failure' || steps.ecb.outcome == 'failure' || steps.boj.outcome == 'failure' || steps.fdi.outcome == 'failure'
         run: |
-          echo "mof=${{ steps.mof.outcome }} ecb=${{ steps.ecb.outcome }} boj=${{ steps.boj.outcome }}"
+          echo "mof=${{ steps.mof.outcome }} ecb=${{ steps.ecb.outcome }} boj=${{ steps.boj.outcome }} fdi=${{ steps.fdi.outcome }}"
           exit 1
