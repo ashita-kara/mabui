@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>MABUI — 厚みの試作</title>
+<style>html,body{margin:0;background:#05070b}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script>
+// 厚みの試作（12秒）。日本の投資家が持つ外国の証券の年末残高を、国の位置から積み上がる光の柱で描く。
+// 円目線：1粒＝1兆円。ドル目線：1粒＝「2021年末に1兆円だった額のドル」（約87億ドル）。
+// こうすると2021年末で両方の高さがそろい、そこからの伸び方だけを比べられる。
+const W = 1920, H = 1080, DURATION = 13;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const FONT = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+const BG = '#05070b', TEXT = '#e9eef3', SUB = '#8a98a8';
+const YEN = [242, 177, 52], USD = [63, 193, 165];
+
+// 地図：太平洋中心（中心 東経150度）、少し見下ろす角度（縦を0.62倍）
+const MAP = { cx: 960, lon0: 150, k: 5.0, top: 560, tilt: 0.62, latTop: 84 };
+const COLS = 3, SP = 5, ROW = 4.2;       // 柱：横3粒、粒の間隔
+const JAPAN = { lon: 138.5, lat: 36.5 };
+
+// 時間割
+const T = { appear: [0, 1], yen: [1, 6], rewind: [6.0, 6.9], lens: [7.0, 7.8], usd: [7.9, 11.9] };
+
+let D = null;
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const ease = k => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+const ramp = (t, a, b) => ease((t - a) / (b - a));
+const lerp = (a, b, k) => a + (b - a) * k;
+const mix = (a, b, k) => a.map((v, i) => Math.round(lerp(v, b[i], k)));
+
+function proj(lon, lat) {
+  let d = lon - MAP.lon0; while (d < -180) d += 360; while (d > 180) d -= 360;
+  return [MAP.cx + d * MAP.k, MAP.top + (MAP.latTop - lat) * MAP.k * MAP.tilt];
+}
+
+function setData(d) {
+  D = d;
+  const y0 = d.years[0];
+  D.usdUnit = 1e4 / d.year_end_rates[y0].jpy_per_usd;  // 2021年末に1兆円だった額（億ドル）
+  for (const c of D.countries) [c.x, c.y] = proj(c.lon, c.lat);
+  D.landXY = D.land.map(([lo, la]) => proj(lo, la));
+  [D.jx, D.jy] = proj(JAPAN.lon, JAPAN.lat);
+}
+
+// t における「どの目線で、何年の値を、どれだけ補間して」見せるか
+function state(t) {
+  const ys = D.years, n = ys.length;
+  const lensK = ramp(t, ...T.lens);
+  const grow = ramp(t, 1.0, 1.8);
+  if (t >= T.rewind[0] && t < T.usd[0]) {
+    // 最終年から2021年へ巻き戻す（その後、2021年のまま目線を切り替える）
+    return { i0: n - 1, i1: 0, k: ramp(t, ...T.rewind), lensK, grow, rewinding: true };
+  }
+  const span = t < T.rewind[0] ? T.yen : T.usd;
+  const per = (span[1] - span[0]) / n;
+  const f = clamp((t - span[0]) / per, 0, n - 0.001);
+  const i = Math.floor(f), within = f - i;
+  const k = ease(clamp(within / 0.45));        // 年の最初の0.45で移り変わる
+  return { i0: Math.max(0, i - 1), i1: i, k: i === 0 ? 1 : k, lensK, grow };
+}
+
+function value(c, s, lens) {          // 粒の数
+  const y0 = D.years[s.i0], y1 = D.years[s.i1];
+  const unit = lens === 'yen' ? 1e4 : D.usdUnit;  // 億円 / 億ドル
+  const src = lens === 'yen' ? c.jpy_oku : c.usd_oku;
+  return lerp((src[y0] || 0) / unit, (src[y1] || 0) / unit, s.k);
+}
+
+function shownCount(c, s) {
+  // 目線の切り替え中は、円の粒数からドルの粒数へ移る
+  return lerp(value(c, s, 'yen'), value(c, s, 'usd'), s.lensK) * s.grow;
+}
+
+function text(s, x, y, size, color, weight = 400, align = 'left', alpha = 1) {
+  if (alpha <= 0.001 || !s) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${FONT}`;
+  ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); ctx.restore();
+}
+
+function fmt(c, s) {
+  const y0 = D.years[s.i0], y1 = D.years[s.i1];
+  if (s.lensK < 0.5) {
+    const v = lerp(c.jpy_oku[y0] || 0, c.jpy_oku[y1] || 0, s.k) / 1e4;
+    return `${v.toFixed(v < 10 ? 1 : 0)}兆円`;
+  }
+  const v = lerp(c.usd_oku[y0] || 0, c.usd_oku[y1] || 0, s.k);
+  return v >= 1e4 ? `${(v / 1e4).toFixed(2)}兆ドル` : `${Math.round(v).toLocaleString('ja-JP')}億ドル`;
+}
+
+function renderAt(t) {
+  const s = state(t), appear = ramp(t, ...T.appear);
+  const col = mix(YEN, USD, s.lensK);
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+
+  // 陸地（飾りではなく場所の目印。点の明るさに意味はない）
+  ctx.fillStyle = `rgba(120,140,165,${0.28 * appear})`;
+  for (const [x, y] of D.landXY) { ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill(); }
+
+  // 日本
+  ctx.save(); ctx.globalAlpha = appear;
+  ctx.strokeStyle = 'rgba(233,238,243,0.9)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.ellipse(D.jx, D.jy, 16, 10, 0, 0, 7); ctx.stroke(); ctx.restore();
+  text('日本', D.jx, D.jy + 30, 22, TEXT, 700, 'center', appear);
+
+  // 柱（光の粒の積み重ね）
+  ctx.globalCompositeOperation = 'lighter';
+  for (const c of D.countries) {
+    const n = shownCount(c, s);
+    if (n <= 0) continue;
+    const full = Math.floor(n), frac = n - full;
+    // 根元の光（柱の位置を示す）
+    ctx.fillStyle = `rgba(${col},${0.10 * Math.min(1, n)})`;
+    ctx.beginPath(); ctx.ellipse(c.x, c.y, 10, 4, 0, 0, 7); ctx.fill();
+    const total = full + (frac > 0 ? 1 : 0);
+    for (let k = 0; k < total; k++) {
+      // 粒 k の高さは k で決まる（高さ＝金額）。横位置と小さな揺れは飾り
+      const row = k / COLS;
+      const h1 = Math.sin(k * 12.9898 + c.lon * 78.233) * 43758.5453; const r1 = h1 - Math.floor(h1);
+      const tw = 0.7 + 0.3 * Math.sin(t * 2.4 + k * 1.7 + c.lon);
+      const a = (k === full ? Math.max(frac, 0.12) : 1) * tw;
+      const x = c.x + (r1 - 0.5) * 16 + Math.sin(t * 0.9 + k * 0.7) * 3;
+      const y = c.y - row * ROW - 3 + Math.cos(t * 1.1 + k) * 1.5;
+      ctx.fillStyle = `rgba(${col},${0.08 * a})`; ctx.beginPath(); ctx.arc(x, y, 5, 0, 7); ctx.fill();
+      ctx.fillStyle = `rgba(${col},${0.85 * a})`; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, 7); ctx.fill();
+    }
+  }
+  ctx.globalCompositeOperation = 'source-over';
+
+  // 上位6か国の名前と額（その時点の値で選ぶ）
+  // 重なるときは上へずらし、細い線で柱の先とつなぐ
+  const top = [...D.countries].sort((a, b) => shownCount(b, s) - shownCount(a, s)).slice(0, 6);
+  const placed = [];
+  for (const c of top) {
+    const n = shownCount(c, s), tipY = c.y - n / COLS * ROW - 6;
+    const bw = 190, bh = 48;
+    let lx = c.x + 16, ly = tipY - 10;
+    for (let guard = 0; guard < 30 && placed.some(p => lx < p.x + p.w && lx + bw > p.x && ly - bh < p.y && ly > p.y - p.h); guard++) ly -= bh + 4;
+    placed.push({ x: lx, y: ly, w: bw, h: bh });
+    const al = appear * s.grow;
+    ctx.save(); ctx.globalAlpha = 0.5 * al; ctx.strokeStyle = SUB; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(c.x, tipY); ctx.lineTo(lx - 4, ly - 12); ctx.stroke(); ctx.restore();
+    text(c.name_ja, lx, ly - 32, 20, TEXT, 700, 'left', al);
+    text(fmt(c, s), lx, ly - 10, 18, `rgb(${col})`, 700, 'left', al);
+  }
+
+  // 見出し
+  const y = D.years[s.i1];
+  text('日本の投資家が持つ、外国の株や債券', 70, 70, 34, SUB, 400, 'left', appear);
+  text(`${y}年末`, 70, 140, 64, TEXT, 700, 'left', appear);
+  const ty = lerp(D.total_jpy_oku[D.years[s.i0]], D.total_jpy_oku[y], s.k) / 1e4;
+  const tu = lerp(D.total_usd_oku[D.years[s.i0]], D.total_usd_oku[y], s.k) / 1e4;
+  text(`合計　${ty.toFixed(0)}兆円`, 70, 215, 44, `rgb(${YEN})`, 700, 'left', appear * (1 - s.lensK));
+  text(`合計　${tu.toFixed(2)}兆ドル`, 70, 215, 44, `rgb(${USD})`, 700, 'left', appear * s.lensK);
+  const y0 = D.years[0];
+  const gy = (ty * 1e4 / D.total_jpy_oku[y0] - 1) * 100, gu = (tu * 1e4 / D.total_usd_oku[y0] - 1) * 100;
+  const g = s.lensK < 0.5 ? gy : gu, gs = `${y0}年末から ${g >= 0 ? '+' : '−'}${Math.abs(g).toFixed(0)}%`;
+  // 合計の文字幅のあとに置く（重ならないように）
+  ctx.font = `700 44px ${FONT}`;
+  const tw = ctx.measureText(s.lensK < 0.5 ? `合計　${ty.toFixed(0)}兆円` : `合計　${tu.toFixed(2)}兆ドル`).width;
+  const showG = !(s.rewinding || (y === y0 && s.k > 0.99));
+  text(gs, 70 + tw + 28, 217, 32, s.lensK < 0.5 ? `rgb(${YEN})` : `rgb(${USD})`, 400, 'left', appear * (showG ? 1 : 0));
+
+  // 目線
+  ctx.save(); ctx.globalAlpha = appear; ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 2.5; ctx.fillStyle = BG;
+  ctx.beginPath(); ctx.roundRect(70, 262, 220, 50, 25); ctx.fill(); ctx.stroke(); ctx.restore();
+  text('¥  円目線', 180, 288, 26, `rgb(${YEN})`, 700, 'center', appear * clamp(1 - 2 * s.lensK));
+  text('$  ドル目線', 180, 288, 26, `rgb(${USD})`, 700, 'center', appear * clamp(2 * s.lensK - 1));
+  text(s.lensK < 0.5 ? '光の粒1つ＝1兆円' : `光の粒1つ＝約${Math.round(D.usdUnit)}億ドル（${D.years[0]}年末に1兆円だった額。各年末のレートで換算）`, 310, 288, 22, SUB, 400, 'left', appear);
+
+  // 注意書きと出典
+  text('高さ＝持っている額（年末の残高）。増減には、買い増し・売却のほか、値動きや為替の影響も含む', 70, 990, 20, SUB, 400, 'left', appear);
+  text('国は証券を発行した者の所在国。ケイマン諸島・ルクセンブルク・アイルランドなどは、そこに籍を置く投資信託を通じた分を含む', 70, 1018, 20, SUB, 400, 'left', appear);
+  text('出典：日本銀行・財務省「証券投資残高地域別統計（資産）」、ECB参照レート を加工して作成　地図：Natural Earth', 70, 1046, 18, '#6b7886', 400, 'left', appear);
+  text('試作', W - 50, 1046, 18, '#55606c', 400, 'right', appear);
+}
+
+window.setData = setData; window.renderAt = renderAt; window.DURATION = DURATION;
+</script>
+</body>
+</html>

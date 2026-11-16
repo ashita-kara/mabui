@@ -25,6 +25,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
       # どちらも「変化がなければ何も保存しない」ので、毎回両方を実行してよい。
       # 片方が失敗しても、もう片方は保存する。
       - name: MOF weekly securities transactions
@@ -36,6 +39,11 @@ jobs:
         id: ecb
         continue-on-error: true
         run: python scripts/ecb_exr_daily.py all
+
+      - name: BOJ portfolio holdings by country (annual)
+        id: boj
+        continue-on-error: true
+        run: python scripts/boj_portfolio_assets_by_country.py all
 
       - name: Commit if changed
         run: |
@@ -50,7 +58,7 @@ jobs:
           fi
 
       - name: Fail if any source failed
-        if: steps.mof.outcome == 'failure' || steps.ecb.outcome == 'failure'
+        if: steps.mof.outcome == 'failure' || steps.ecb.outcome == 'failure' || steps.boj.outcome == 'failure'
         run: |
-          echo "mof=${{ steps.mof.outcome }} ecb=${{ steps.ecb.outcome }}"
+          echo "mof=${{ steps.mof.outcome }} ecb=${{ steps.ecb.outcome }} boj=${{ steps.boj.outcome }}"
           exit 1

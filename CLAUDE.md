@@ -40,6 +40,12 @@
 - ECB 参照レート（円・ドル、対ユーロ）：`scripts/ecb_exr_daily.py`。`sources/ecb_exr_daily.md`。
   公表値は文字列のまま残す（ECB の条件：改変しない）。円ドルは MABUI の計算列として分けている。
   ECB の API は TLS チェーンが不完全なので `scripts/certs/extra_intermediates.pem` で補っている（検証は切らない）。
+- 日本銀行 証券投資残高（資産・国別・年末、2021〜2025）：`scripts/boj_portfolio_assets_by_country.py`（xlrd が必要）。
+  `sources/boj_portfolio_assets_by_country.md`。残高なので流れとして描かない（厚みとして描く）。
+- 動画の試作：`video/`（Playwright でコマを描き ffmpeg で MP4）。`render.mjs` は PAGE/DATA/NAME の環境変数で切替。
+  - 年ごとの丸を円形に並べた30秒版（inward_lens）は「何の動画か分からない」と不評 → 作り直し方針はメモリ参照。
+  - 群れの試作（swarm_test）、厚みの地図の試作（holdings_map：円で+33%／ドルで−3%、2021→2025年末）。
+- 国別の「流れ」の公的データ：対内証券投資の国別フローは日本の統計に無い。直接投資は国別フローあり（四半期）。
 - 定期実行：`.github/workflows/fetch-data.yml`。
 - GitHub：公開リポジトリ https://github.com/ashita-kara/mabui （アカウント ashita-kara）。
   ma-san-do は過去のアカウントで使わない（この Mac の SSH 鍵は ma-san-do のもの）。push は gh の認証（HTTPS）。

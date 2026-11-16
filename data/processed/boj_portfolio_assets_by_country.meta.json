@@ -1,0 +1,33 @@
+{
+  "source_id": "boj_portfolio_assets_by_country",
+  "title_ja": "証券投資残高地域別統計（資産）（全地域ベース）",
+  "title_en": "Regional Portfolio Investment Position (Assets) (all countries basis)",
+  "publisher": "日本銀行（財務省ホームページに掲載）",
+  "source_page": "https://www.mof.go.jp/policy/international_policy/reference/iip/data/index.htm",
+  "license": "公共データ利用規約（第1.0版）(PDL1.0)（財務省サイト掲載コンテンツ）",
+  "attribution": "出典：日本銀行・財務省「証券投資残高地域別統計（資産）」を加工して作成",
+  "unit": "100 million JPY (億円), year-end position",
+  "classification": "発行者の所在国別 (residence of the issuer)",
+  "years": [
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "snapshots_used": {
+    "2021": "20261116T012251Z_rdip_all2021.xls",
+    "2022": "20261116T012251Z_rdip_all2022.xls",
+    "2023": "20261116T012251Z_rdip_all2023.xls",
+    "2024": "20261116T012252Z_rdip_all2024.xls",
+    "2025": "20261116T012253Z_rdip_all2025.xls"
+  },
+  "consistency_warnings": [
+    "2021: 地域の和 5799435 ≠ 合計 5799539",
+    "2022: 地域の和 5312131 ≠ 合計 5312238",
+    "2023: 地域の和 6173357 ≠ 合計 6173479",
+    "2024: 地域の和 6988018 ≠ 合計 6988181",
+    "2025: 地域の和 7686334 ≠ 合計 7686533"
+  ],
+  "definitions": "sources/boj_portfolio_assets_by_country.md"
+}

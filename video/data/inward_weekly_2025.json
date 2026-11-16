@@ -1,0 +1,269 @@
+{
+  "series": "inward_total_net",
+  "unit": "億円",
+  "source": "財務省「対外及び対内証券売買契約等の状況（週次・指定報告機関ベース）」",
+  "built_from": "20261114T162938Z_week.csv",
+  "weeks": [
+    {
+      "week_start": "2025-01-05",
+      "week_end": "2025-01-11",
+      "net_oku_yen": 23405
+    },
+    {
+      "week_start": "2025-01-12",
+      "week_end": "2025-01-18",
+      "net_oku_yen": 21486
+    },
+    {
+      "week_start": "2025-01-19",
+      "week_end": "2025-01-25",
+      "net_oku_yen": 13639
+    },
+    {
+      "week_start": "2025-01-26",
+      "week_end": "2025-02-01",
+      "net_oku_yen": 208
+    },
+    {
+      "week_start": "2025-02-02",
+      "week_end": "2025-02-08",
+      "net_oku_yen": -591
+    },
+    {
+      "week_start": "2025-02-09",
+      "week_end": "2025-02-15",
+      "net_oku_yen": -4757
+    },
+    {
+      "week_start": "2025-02-16",
+      "week_end": "2025-02-22",
+      "net_oku_yen": -10795
+    },
+    {
+      "week_start": "2025-02-23",
+      "week_end": "2025-03-01",
+      "net_oku_yen": -6620
+    },
+    {
+      "week_start": "2025-03-02",
+      "week_end": "2025-03-08",
+      "net_oku_yen": 15633
+    },
+    {
+      "week_start": "2025-03-09",
+      "week_end": "2025-03-15",
+      "net_oku_yen": -6677
+    },
+    {
+      "week_start": "2025-03-16",
+      "week_end": "2025-03-22",
+      "net_oku_yen": -37112
+    },
+    {
+      "week_start": "2025-03-23",
+      "week_end": "2025-03-29",
+      "net_oku_yen": -10904
+    },
+    {
+      "week_start": "2025-03-30",
+      "week_end": "2025-04-05",
+      "net_oku_yen": 67139
+    },
+    {
+      "week_start": "2025-04-06",
+      "week_end": "2025-04-12",
+      "net_oku_yen": 54359
+    },
+    {
+      "week_start": "2025-04-13",
+      "week_end": "2025-04-19",
+      "net_oku_yen": 33364
+    },
+    {
+      "week_start": "2025-04-20",
+      "week_end": "2025-04-26",
+      "net_oku_yen": -20909
+    },
+    {
+      "week_start": "2025-04-27",
+      "week_end": "2025-05-03",
+      "net_oku_yen": 1517
+    },
+    {
+      "week_start": "2025-05-04",
+      "week_end": "2025-05-10",
+      "net_oku_yen": 13070
+    },
+    {
+      "week_start": "2025-05-11",
+      "week_end": "2025-05-17",
+      "net_oku_yen": -10347
+    },
+    {
+      "week_start": "2025-05-18",
+      "week_end": "2025-05-24",
+      "net_oku_yen": -24382
+    },
+    {
+      "week_start": "2025-05-25",
+      "week_end": "2025-05-31",
+      "net_oku_yen": 19163
+    },
+    {
+      "week_start": "2025-06-01",
+      "week_end": "2025-06-07",
+      "net_oku_yen": 3692
+    },
+    {
+      "week_start": "2025-06-08",
+      "week_end": "2025-06-14",
+      "net_oku_yen": 19360
+    },
+    {
+      "week_start": "2025-06-15",
+      "week_end": "2025-06-21",
+      "net_oku_yen": 6036
+    },
+    {
+      "week_start": "2025-06-22",
+      "week_end": "2025-06-28",
+      "net_oku_yen": 10564
+    },
+    {
+      "week_start": "2025-06-29",
+      "week_end": "2025-07-05",
+      "net_oku_yen": 8910
+    },
+    {
+      "week_start": "2025-07-06",
+      "week_end": "2025-07-12",
+      "net_oku_yen": -970
+    },
+    {
+      "week_start": "2025-07-13",
+      "week_end": "2025-07-19",
+      "net_oku_yen": 14764
+    },
+    {
+      "week_start": "2025-07-20",
+      "week_end": "2025-07-26",
+      "net_oku_yen": -13920
+    },
+    {
+      "week_start": "2025-07-27",
+      "week_end": "2025-08-02",
+      "net_oku_yen": 13097
+    },
+    {
+      "week_start": "2025-08-03",
+      "week_end": "2025-08-09",
+      "net_oku_yen": 15869
+    },
+    {
+      "week_start": "2025-08-10",
+      "week_end": "2025-08-16",
+      "net_oku_yen": -13641
+    },
+    {
+      "week_start": "2025-08-17",
+      "week_end": "2025-08-23",
+      "net_oku_yen": -6381
+    },
+    {
+      "week_start": "2025-08-24",
+      "week_end": "2025-08-30",
+      "net_oku_yen": -1238
+    },
+    {
+      "week_start": "2025-08-31",
+      "week_end": "2025-09-06",
+      "net_oku_yen": 5290
+    },
+    {
+      "week_start": "2025-09-07",
+      "week_end": "2025-09-13",
+      "net_oku_yen": -10194
+    },
+    {
+      "week_start": "2025-09-14",
+      "week_end": "2025-09-20",
+      "net_oku_yen": -7009
+    },
+    {
+      "week_start": "2025-09-21",
+      "week_end": "2025-09-27",
+      "net_oku_yen": -61786
+    },
+    {
+      "week_start": "2025-09-28",
+      "week_end": "2025-10-04",
+      "net_oku_yen": 45877
+    },
+    {
+      "week_start": "2025-10-05",
+      "week_end": "2025-10-11",
+      "net_oku_yen": 36380
+    },
+    {
+      "week_start": "2025-10-12",
+      "week_end": "2025-10-18",
+      "net_oku_yen": 23538
+    },
+    {
+      "week_start": "2025-10-19",
+      "week_end": "2025-10-25",
+      "net_oku_yen": -9340
+    },
+    {
+      "week_start": "2025-10-26",
+      "week_end": "2025-11-01",
+      "net_oku_yen": 27972
+    },
+    {
+      "week_start": "2025-11-02",
+      "week_end": "2025-11-08",
+      "net_oku_yen": -10729
+    },
+    {
+      "week_start": "2025-11-09",
+      "week_end": "2025-11-15",
+      "net_oku_yen": 15935
+    },
+    {
+      "week_start": "2025-11-16",
+      "week_end": "2025-11-22",
+      "net_oku_yen": -12682
+    },
+    {
+      "week_start": "2025-11-23",
+      "week_end": "2025-11-29",
+      "net_oku_yen": 25734
+    },
+    {
+      "week_start": "2025-11-30",
+      "week_end": "2025-12-06",
+      "net_oku_yen": 6650
+    },
+    {
+      "week_start": "2025-12-07",
+      "week_end": "2025-12-13",
+      "net_oku_yen": 20831
+    },
+    {
+      "week_start": "2025-12-14",
+      "week_end": "2025-12-20",
+      "net_oku_yen": -2042
+    },
+    {
+      "week_start": "2025-12-21",
+      "week_end": "2025-12-27",
+      "net_oku_yen": -46540
+    },
+    {
+      "week_start": "2025-12-28",
+      "week_end": "2026-01-03",
+      "net_oku_yen": 5354
+    }
+  ],
+  "total_oku_yen": 239270
+}

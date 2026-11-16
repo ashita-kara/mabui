@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>MABUI — 群れの試作</title>
+<style>html,body{margin:0;background:#06080c}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// 群れの試作（8秒）。2025年の週ごとの買い越し（財務省）を、粒の移動で見せる。
+// 明るい粒 1つ = 100億円。日本側の粒の数 = その時点までの今年の累計（マイナスのときは0粒）。
+// 時刻 t の絵は、0秒から固定ステップでシミュレーションした結果。乱数は固定シード。
+const W = 1080, H = 1350, FPS = 30, DURATION = 8;
+const OKU_PER_DOT = 100;
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const FONT = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+const BG = '#06080c', IN = [255, 196, 110], OUTC = [110, 170, 255], TEXT = '#e9eef3', SUB = '#8a98a8';
+
+const ABROAD = { x: 540, y: 440, rx: 300, ry: 110 };
+const JAPAN  = { x: 540, y: 900, rx: 230, ry: 130 };
+const T0 = 0.6, T1 = 7.4; // 週を進める時間帯
+
+let DATA = null, S = null;
+
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const ease=k=>{k=clamp(k);return k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2};
+
+// 群れ全体を同じ向きに揺らす流れ場（集団の「気分」）
+function flow(x, y, t) {
+  const a = Math.sin(x * 0.006 + t * 0.7) + Math.cos(y * 0.008 - t * 0.5) + Math.sin((x + y) * 0.004 + t * 0.3);
+  return [Math.cos(a * 1.7), Math.sin(a * 1.7)];
+}
+
+function setData(d) { DATA = d; reset(); }
+
+function reset() {
+  const rnd = mulberry32(2025);
+  S = { frame: -1, rnd, dots: [], weekIdx: -1, cum: 0, flash: null, mist: [] };
+  for (let i = 0; i < 500; i++) { // 海外側のもや（飾り。数に意味はない）
+    const a = rnd() * 6.283, r = Math.sqrt(rnd());
+    S.mist.push({ x: ABROAD.x + Math.cos(a) * r * ABROAD.rx * 1.2, y: ABROAD.y + Math.sin(a) * r * ABROAD.ry * 1.3, p: rnd() * 6.283 });
+  }
+  ctx.fillStyle = BG; ctx.fillRect(0, 0, W, H);
+}
+
+function inZone(z, rnd) {
+  const a = rnd() * 6.283, r = Math.sqrt(rnd());
+  return [z.x + Math.cos(a) * r * z.rx, z.y + Math.sin(a) * r * z.ry];
+}
+
+function startWeek(k) {
+  const w = DATA.weeks[k], n = Math.round(w.net_oku_yen / OKU_PER_DOT), rnd = S.rnd;
+  S.cum += w.net_oku_yen;
+  S.flash = { k, net: w.net_oku_yen, at: S.frame };
+  const weekFrames = (T1 - T0) / DATA.weeks.length * FPS;
+  if (n > 0) {
+    for (let i = 0; i < n; i++) {
+      const [x, y] = inZone(ABROAD, rnd);
+      const [hx, hy] = inZone(JAPAN, rnd);
+      S.dots.push({ x, y, vx: 0, vy: 0, hx, hy, home: 'jp', delay: rnd() * weekFrames, alive: true, a: 0, seed: rnd() * 100 });
+    }
+  } else if (n < 0) {
+    const inJp = S.dots.filter(d => d.home === 'jp' && d.alive);
+    for (let i = 0; i < Math.min(-n, inJp.length); i++) {
+      const d = inJp[Math.floor(rnd() * inJp.length)];
+      if (d.home === 'jp') { d.home = 'out'; d.delay = rnd() * weekFrames; [d.hx, d.hy] = inZone(ABROAD, rnd); }
+    }
+  }
+}
+
+function step() {
+  S.frame++;
+  const t = S.frame / FPS;
+  // 週を進める
+  const k = Math.floor((t - T0) / (T1 - T0) * DATA.weeks.length);
+  while (S.weekIdx < Math.min(k, DATA.weeks.length - 1)) startWeek(++S.weekIdx);
+
+  for (const d of S.dots) {
+    if (!d.alive) continue;
+    if (d.delay > 0) { d.delay--; continue; }
+    // 群れ全体が同じリズムで揺れる（集団の呼吸）。帰る場所ごと動く
+    const sx = Math.sin(t * 0.9) * 28 + Math.sin(t * 0.37) * 18, sy = Math.cos(t * 0.7) * 16;
+    const [fx, fy] = flow(d.x, d.y, t + d.seed * 0.01);
+    const dx = d.hx + sx - d.x, dy = d.hy + sy - d.y;
+    d.vx = d.vx * 0.84 + dx * 0.022 + fx * 0.9;
+    d.vy = d.vy * 0.84 + dy * 0.022 + fy * 0.9;
+    d.x += d.vx; d.y += d.vy;
+    if (d.home === 'out') {
+      // 海外へ戻る粒は、近づくにつれて薄くなり、着いたら消える（海外に積み上がらない）
+      const r = Math.hypot(dx, dy);
+      d.a = Math.min(d.a, r / 260);
+      if (r < 50 || d.a < 0.03) d.alive = false;
+    } else {
+      d.a = Math.min(1, d.a + 0.08);
+    }
+  }
+  S.dots = S.dots.filter(d => d.alive);
+}
+
+function draw() {
+  const t = S.frame / FPS;
+  // 残像：前のコマを少しずつ消す
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(6,8,12,0.28)'; ctx.fillRect(0, 0, W, H);
+
+  ctx.globalCompositeOperation = 'lighter';
+  for (const m of S.mist) {
+    ctx.fillStyle = `rgba(150,170,200,${0.025 + 0.02 * Math.sin(t * 0.8 + m.p)})`;
+    ctx.beginPath(); ctx.arc(m.x + Math.sin(t * 0.4 + m.p) * 12, m.y + Math.cos(t * 0.3 + m.p) * 8, 3, 0, 7); ctx.fill();
+  }
+  for (const d of S.dots) {
+    if (d.delay > 0) continue;
+    const c = d.home === 'out' ? OUTC : IN;
+    ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${0.05 * d.a})`;
+    ctx.beginPath(); ctx.arc(d.x, d.y, 7, 0, 7); ctx.fill();
+    ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${0.75 * d.a})`;
+    ctx.beginPath(); ctx.arc(d.x, d.y, 1.7, 0, 7); ctx.fill();
+  }
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+function text(s, x, y, size, color, weight = 400, alpha = 1) {
+  if (alpha <= 0.001) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.font = `${weight} ${size}px ${FONT}`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, x, y); ctx.restore();
+}
+
+function overlay() {
+  // 文字は残像を残さないよう、毎コマ上から描く（別レイヤーに相当）
+  const t = S.frame / FPS, a = ease(t / 0.5);
+  ctx.save(); ctx.fillStyle = BG; ctx.fillRect(0, 0, W, 210); ctx.fillRect(0, 1180, W, 170); ctx.restore();
+  text('海外から日本へ、株や債券を買いに来たお金（2025年）', W / 2, 70, 34, SUB, 400, a);
+  const w = DATA.weeks[Math.max(0, S.weekIdx)];
+  const md = s => { const [, m, d] = s.split('-').map(Number); return `${m}月${d}日`; };
+  const cum = S.weekIdx >= 0 ? S.cum : 0;
+  text(`今年の合計　${cum >= 0 ? '+' : '−'}${(Math.abs(cum) / 10000).toFixed(1)}兆円`, W / 2, 136, 60, TEXT, 700, a);
+  text(S.weekIdx >= 0 ? `${md(w.week_start)}〜${md(w.week_end)} の週` : '', W / 2, 188, 26, SUB, 400, a);
+
+  text('海外', 110, ABROAD.y, 40, '#a9b6c6', 700, a);
+  text('日本', 110, JAPAN.y, 40, TEXT, 700, a);
+
+  // その週の動き（買いが多い週は暖色、売りが多い週は寒色）
+  if (S.flash) {
+    const age = (S.frame - S.flash.at) / FPS, f = clamp(1 - age / 0.6);
+    const pos = S.flash.net >= 0;
+    text(`この週 ${pos ? '+' : '−'}${(Math.abs(S.flash.net) / 10000).toFixed(1)}兆円`, W / 2 + 300, 670, 30,
+         pos ? `rgb(${IN})` : `rgb(${OUTC})`, 700, f * a);
+  }
+  text('明るい粒1つ＝100億円（買った分から売った分を引いた額）。海外側のもやは飾り', W / 2, 1220, 24, SUB, 400, a);
+  text('出典：財務省「対外及び対内証券売買契約等の状況（週次・指定報告機関ベース）」を加工して作成', W / 2, 1262, 19, SUB, 400, a);
+  text('試作', W - 60, 1320, 18, '#55606c', 400, a);
+}
+
+function renderAt(t) {
+  if (!DATA) throw new Error('setData() を先に呼ぶ');
+  const target = Math.round(t * FPS);
+  if (target < S.frame) reset();
+  while (S.frame < target) { step(); draw(); }
+  overlay();
+}
+window.setData = setData; window.renderAt = renderAt; window.DURATION = DURATION;
+</script>
+</body>
+</html>

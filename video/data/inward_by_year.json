@@ -1,0 +1,260 @@
+{
+  "title": "非居住者による日本の証券の買い越し（年計）— 円とドル",
+  "series": "inward_total_net",
+  "method": "動画「円目線とドル目線」用の集計：非居住者による日本の証券の買い越し（年ごと）を、円とドルで比べる。\n\n入力（どちらも build 済みの加工データ）:\n    data/processed/mof_itn_weekly.csv   財務省 週次・指定報告機関ベース（億円）\n    data/processed/ecb_exr_daily.csv    ECB 参照レートから計算した円ドル\n出力:\n    video/data/inward_by_year.json\n\n方法:\n- 対象は inward_total_net（非居住者による日本の証券の取得超。株式・投資ファンド持分＋中長期債＋短期債）。\n- 週の年は week_start の年。対象は全52〜53週がそろう 2005〜2025年（2026年は途中なので除く）。\n- ドル換算は週ごと：その週の ECB 営業日の円ドル（MABUI 計算値）の単純平均で割る。\n  実際の取引時点のレートではないので、近似である。\n- 頑健性：年の割り当て（週の初日／最終日／木曜）と換算レート（週平均／週末の値）を変えた6通りも計算し、出力に残す。",
+  "sources": [
+    "財務省「対外及び対内証券売買契約等の状況（週次・指定報告機関ベース）」",
+    "ECB euro foreign exchange reference rates (Source: ECB statistics.)"
+  ],
+  "built_from": {
+    "mof": "20261114T162938Z_week.csv",
+    "ecb_latest_retrieved_at": "2026-11-15T08:25:23Z"
+  },
+  "years": [
+    {
+      "year": 2005,
+      "weeks": 52,
+      "jpy_trillion": 18.94,
+      "usd_billion": 171.7,
+      "avg_jpy_per_usd": 110.18,
+      "rank_jpy": 4,
+      "rank_usd": 3
+    },
+    {
+      "year": 2006,
+      "weeks": 53,
+      "jpy_trillion": 18.21,
+      "usd_billion": 158.3,
+      "avg_jpy_per_usd": 116.38,
+      "rank_jpy": 5,
+      "rank_usd": 5
+    },
+    {
+      "year": 2007,
+      "weeks": 52,
+      "jpy_trillion": 23.59,
+      "usd_billion": 202.1,
+      "avg_jpy_per_usd": 117.63,
+      "rank_jpy": 2,
+      "rank_usd": 2
+    },
+    {
+      "year": 2008,
+      "weeks": 52,
+      "jpy_trillion": -9.8,
+      "usd_billion": -106.4,
+      "avg_jpy_per_usd": 103.14,
+      "rank_jpy": 19,
+      "rank_usd": 21
+    },
+    {
+      "year": 2009,
+      "weeks": 52,
+      "jpy_trillion": -9.92,
+      "usd_billion": -106.2,
+      "avg_jpy_per_usd": 93.6,
+      "rank_jpy": 20,
+      "rank_usd": 20
+    },
+    {
+      "year": 2010,
+      "weeks": 52,
+      "jpy_trillion": 9.15,
+      "usd_billion": 103.4,
+      "avg_jpy_per_usd": 87.75,
+      "rank_jpy": 12,
+      "rank_usd": 11
+    },
+    {
+      "year": 2011,
+      "weeks": 52,
+      "jpy_trillion": 21.53,
+      "usd_billion": 264.8,
+      "avg_jpy_per_usd": 79.71,
+      "rank_jpy": 3,
+      "rank_usd": 1
+    },
+    {
+      "year": 2012,
+      "weeks": 53,
+      "jpy_trillion": 8.07,
+      "usd_billion": 103.3,
+      "avg_jpy_per_usd": 79.93,
+      "rank_jpy": 13,
+      "rank_usd": 12
+    },
+    {
+      "year": 2013,
+      "weeks": 52,
+      "jpy_trillion": 13.94,
+      "usd_billion": 145.5,
+      "avg_jpy_per_usd": 97.85,
+      "rank_jpy": 8,
+      "rank_usd": 6
+    },
+    {
+      "year": 2014,
+      "weeks": 52,
+      "jpy_trillion": 12.11,
+      "usd_billion": 112.9,
+      "avg_jpy_per_usd": 106.01,
+      "rank_jpy": 9,
+      "rank_usd": 9
+    },
+    {
+      "year": 2015,
+      "weeks": 52,
+      "jpy_trillion": 17.6,
+      "usd_billion": 145.4,
+      "avg_jpy_per_usd": 121.06,
+      "rank_jpy": 6,
+      "rank_usd": 7
+    },
+    {
+      "year": 2016,
+      "weeks": 52,
+      "jpy_trillion": -2.11,
+      "usd_billion": -20.0,
+      "avg_jpy_per_usd": 108.72,
+      "rank_jpy": 16,
+      "rank_usd": 16
+    },
+    {
+      "year": 2017,
+      "weeks": 53,
+      "jpy_trillion": 12.05,
+      "usd_billion": 105.3,
+      "avg_jpy_per_usd": 112.19,
+      "rank_jpy": 10,
+      "rank_usd": 10
+    },
+    {
+      "year": 2018,
+      "weeks": 52,
+      "jpy_trillion": 1.47,
+      "usd_billion": 10.0,
+      "avg_jpy_per_usd": 110.37,
+      "rank_jpy": 15,
+      "rank_usd": 15
+    },
+    {
+      "year": 2019,
+      "weeks": 52,
+      "jpy_trillion": 4.62,
+      "usd_billion": 42.2,
+      "avg_jpy_per_usd": 109.02,
+      "rank_jpy": 14,
+      "rank_usd": 14
+    },
+    {
+      "year": 2020,
+      "weeks": 52,
+      "jpy_trillion": 9.79,
+      "usd_billion": 91.2,
+      "avg_jpy_per_usd": 106.71,
+      "rank_jpy": 11,
+      "rank_usd": 13
+    },
+    {
+      "year": 2021,
+      "weeks": 52,
+      "jpy_trillion": 15.33,
+      "usd_billion": 140.9,
+      "avg_jpy_per_usd": 109.87,
+      "rank_jpy": 7,
+      "rank_usd": 8
+    },
+    {
+      "year": 2022,
+      "weeks": 52,
+      "jpy_trillion": -4.06,
+      "usd_billion": -29.3,
+      "avg_jpy_per_usd": 131.52,
+      "rank_jpy": 18,
+      "rank_usd": 18
+    },
+    {
+      "year": 2023,
+      "weeks": 53,
+      "jpy_trillion": -3.59,
+      "usd_billion": -23.4,
+      "avg_jpy_per_usd": 140.57,
+      "rank_jpy": 17,
+      "rank_usd": 17
+    },
+    {
+      "year": 2024,
+      "weeks": 52,
+      "jpy_trillion": -16.25,
+      "usd_billion": -102.6,
+      "avg_jpy_per_usd": 151.68,
+      "rank_jpy": 21,
+      "rank_usd": 19
+    },
+    {
+      "year": 2025,
+      "weeks": 52,
+      "jpy_trillion": 23.93,
+      "usd_billion": 160.4,
+      "avg_jpy_per_usd": 149.63,
+      "rank_jpy": 1,
+      "rank_usd": 4
+    }
+  ],
+  "robustness": [
+    {
+      "year_rule": "start",
+      "rate_rule": "mean",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 4,
+      "usd_2025_vs_top": 0.606
+    },
+    {
+      "year_rule": "start",
+      "rate_rule": "weekend",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 4,
+      "usd_2025_vs_top": 0.612
+    },
+    {
+      "year_rule": "end",
+      "rate_rule": "mean",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 6,
+      "usd_2025_vs_top": 0.66
+    },
+    {
+      "year_rule": "end",
+      "rate_rule": "weekend",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 5,
+      "usd_2025_vs_top": 0.668
+    },
+    {
+      "year_rule": "thu",
+      "rate_rule": "mean",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 5,
+      "usd_2025_vs_top": 0.596
+    },
+    {
+      "year_rule": "thu",
+      "rate_rule": "weekend",
+      "jpy_top": 2025,
+      "jpy_rank_2025": 1,
+      "usd_top": 2011,
+      "usd_rank_2025": 4,
+      "usd_2025_vs_top": 0.603
+    }
+  ]
+}

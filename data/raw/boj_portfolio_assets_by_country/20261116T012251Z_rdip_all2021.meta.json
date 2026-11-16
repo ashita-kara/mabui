@@ -1,0 +1,12 @@
+{
+  "source_id": "boj_portfolio_assets_by_country",
+  "file": "20261116T012251Z_rdip_all2021.xls",
+  "retrieved_at": "2026-11-16T01:22:51Z",
+  "sha256": "c98cafd91782a40a74e2872b41b527692ae1ce7b4fa96effc1c19ec24593232d",
+  "bytes": 81920,
+  "url": "https://www.mof.go.jp/policy/international_policy/reference/iip/rdip_all2021.xls",
+  "page": "https://www.mof.go.jp/policy/international_policy/reference/iip/data/index.htm",
+  "year": 2021,
+  "http_last_modified": "Thu, 25 May 2023 23:40:43 GMT",
+  "http_content_type": "application/vnd.ms-excel"
+}

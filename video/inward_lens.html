@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>MABUI — 円目線とドル目線</title>
+<style>
+  html, body { margin: 0; background: #070a0e; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// 時刻 t（秒）を渡すとその瞬間の1コマを描く。乱数は固定シードなので、同じ t は必ず同じ絵になる。
+const W = 1080, H = 1350, DURATION = 30;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const FONT = '"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+
+const COL = {
+  bg: '#070a0e',
+  agar: '#0f1620',
+  rim: '#2a3644',
+  text: '#e9eef3',
+  sub: '#8a98a8',
+  yen: '#f2b134',    // 円目線
+  usd: '#3fc1a5',    // ドル目線
+  out: '#7d8fa3',    // 売り越し（中が空の輪）
+};
+
+const DISH = { x: 540, y: 690, r: 410 };
+const NUCLEUS_R = 58;
+const RING_IN = 215, RING_OUT = 318, CELL_MAX = 62;
+
+let DATA = null, CELLS = [], AGAR = null;
+
+// ---------------------------------------------------------------- utils
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+const ramp = (t, a, b) => ease((t - a) / (b - a));           // a→b で 0→1
+const win = (t, a, b, f = .4) => Math.min(ramp(t, a, a + f), 1 - ramp(t, b - f, b)); // a〜b で表示
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${n >> 8 & 255},${n & 255},${a})`; }
+function mixHex(h1, h2, k) {
+  const a = parseInt(h1.slice(1), 16), b = parseInt(h2.slice(1), 16);
+  const c = [16, 8, 0].map(s => Math.round(lerp(a >> s & 255, b >> s & 255, k)));
+  return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+}
+const fmtCho = v => `${v.toFixed(1)}兆円`;
+const fmtOkuUsd = b => `${Math.round(b * 10).toLocaleString('ja-JP')}億ドル`; // 10億ドル → 億ドル
+
+// ---------------------------------------------------------------- setup
+function setData(d) {
+  DATA = d;
+  const ys = d.years;
+  const maxJ = Math.max(...ys.map(y => Math.abs(y.jpy_trillion)));
+  const maxU = Math.max(...ys.map(y => Math.abs(y.usd_billion)));
+  const rnd = mulberry32(7);
+  CELLS = ys.map((y, i) => {
+    const GAP = 0.9; // 最初の年と最後の年がくっつかないよう、上に少し隙間をあける（ラジアン）
+    const ang = -Math.PI / 2 + GAP / 2 + i * (2 * Math.PI - GAP) / (ys.length - 1);
+    const ring = i % 2 === 0 ? RING_OUT : RING_IN;
+    return {
+      ...y, i, ang,
+      x: DISH.x + Math.cos(ang) * ring,
+      y: DISH.y + Math.sin(ang) * ring,
+      // 面積が値に比例。各目線の中で最大の年を CELL_MAX とする
+      rJ: CELL_MAX * Math.sqrt(Math.abs(y.jpy_trillion) / maxJ),
+      rU: CELL_MAX * Math.sqrt(Math.abs(y.usd_billion) / maxU),
+      neg: y.jpy_trillion < 0,
+      seed: rnd() * 100,
+    };
+  });
+  // 寒天の質感（固定シード）
+  AGAR = document.createElement('canvas'); AGAR.width = W; AGAR.height = H;
+  const g = AGAR.getContext('2d'), r2 = mulberry32(42);
+  for (let k = 0; k < 2600; k++) {
+    const a = r2() * Math.PI * 2, d = Math.sqrt(r2()) * DISH.r;
+    g.fillStyle = `rgba(160,190,210,${0.015 + r2() * 0.04})`;
+    g.beginPath(); g.arc(DISH.x + Math.cos(a) * d, DISH.y + Math.sin(a) * d, 0.6 + r2() * 2.2, 0, 7); g.fill();
+  }
+}
+
+// ---------------------------------------------------------------- scene timing
+const T = {
+  sprout: [0.2, 2.6],
+  hookTail: 1.9,
+  yenFocus: 4.0,
+  lens: [12.0, 14.6],
+  usdFocus: 15.0,
+  insight: 22.0,
+  end: 27.0,
+};
+
+// ---------------------------------------------------------------- drawing
+function blob(x, y, r, t, seed) {
+  ctx.beginPath();
+  const N = 64;
+  for (let k = 0; k <= N; k++) {
+    const th = k / N * Math.PI * 2;
+    const m = 1 + 0.055 * Math.sin(3 * th + t * 1.3 + seed) + 0.035 * Math.sin(5 * th - t * 0.9 + seed * 2);
+    const px = x + Math.cos(th) * r * m, py = y + Math.sin(th) * r * m;
+    k ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function text(s, x, y, size, color, weight = 400, align = 'center', alpha = 1) {
+  if (alpha <= 0.001 || !s) return;
+  ctx.save(); ctx.globalAlpha = alpha; ctx.fillStyle = color;
+  ctx.font = `${weight} ${size}px ${FONT}`; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.fillText(s, x, y); ctx.restore();
+}
+
+function drawDish(t, tint, appear) {
+  ctx.save(); ctx.globalAlpha = appear;
+  const g = ctx.createRadialGradient(DISH.x, DISH.y - 80, 40, DISH.x, DISH.y, DISH.r);
+  g.addColorStop(0, '#142030'); g.addColorStop(1, COL.agar);
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(DISH.x, DISH.y, DISH.r, 0, 7); ctx.fill();
+  ctx.drawImage(AGAR, 0, 0);
+  // 縁（レンズ）：目線の色に染まり、切り替えで回る
+  const rot = ramp(t, ...T.lens) * Math.PI;
+  ctx.lineWidth = 3; ctx.strokeStyle = hexA(tint, 0.55);
+  ctx.beginPath(); ctx.arc(DISH.x, DISH.y, DISH.r, 0, 7); ctx.stroke();
+  ctx.strokeStyle = COL.rim; ctx.lineWidth = 10;
+  ctx.beginPath(); ctx.arc(DISH.x, DISH.y, DISH.r + 9, 0, 7); ctx.stroke();
+  for (let k = 0; k < 72; k++) {
+    const a = rot + k / 72 * Math.PI * 2, long = k % 6 === 0;
+    const r1 = DISH.r + 16, r2 = DISH.r + (long ? 30 : 22);
+    ctx.strokeStyle = hexA(tint, long ? 0.8 : 0.35); ctx.lineWidth = long ? 2.5 : 1.5;
+    ctx.beginPath(); ctx.moveTo(DISH.x + Math.cos(a) * r1, DISH.y + Math.sin(a) * r1);
+    ctx.lineTo(DISH.x + Math.cos(a) * r2, DISH.y + Math.sin(a) * r2); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function cellRadius(c, t) {
+  const grow = ramp(t, T.sprout[0] + c.i * 0.09, T.sprout[0] + c.i * 0.09 + 0.7);
+  return lerp(c.rJ, c.rU, ramp(t, ...T.lens)) * grow;
+}
+
+function focusAlpha(c, t) {
+  // 注目している年以外を少し暗くする
+  const f25 = win(t, T.yenFocus, T.lens[0] + 0.4, 0.6);
+  const fUsd = win(t, T.usdFocus, T.insight + 0.3, 0.6);
+  let dim = 0;
+  if (c.year !== 2025) dim = Math.max(dim, f25);
+  if (c.year !== 2025 && c.year !== 2011) dim = Math.max(dim, fUsd);
+  return 1 - 0.55 * dim;
+}
+
+function drawTentaclesAndFlow(t, tint, appear) {
+  for (const c of CELLS) {
+    const r = cellRadius(c, t); if (r < 1) continue;
+    const a = focusAlpha(c, t) * appear;
+    const dx = c.x - DISH.x, dy = c.y - DISH.y, L = Math.hypot(dx, dy);
+    const ux = dx / L, uy = dy / L;
+    const sx = DISH.x + ux * NUCLEUS_R, sy = DISH.y + uy * NUCLEUS_R;
+    const ex = c.x - ux * r, ey = c.y - uy * r;
+    const wob = Math.sin(t * 1.1 + c.seed) * 14;
+    const cx = (sx + ex) / 2 - uy * wob, cy = (sy + ey) / 2 + ux * wob;
+    const color = c.neg ? COL.out : tint;
+    ctx.save(); ctx.globalAlpha = 0.32 * a; ctx.strokeStyle = color;
+    ctx.lineWidth = 1 + r / 9; ctx.lineCap = 'round';
+    if (c.neg) ctx.setLineDash([6, 8]);
+    ctx.beginPath(); ctx.moveTo(sx, sy); ctx.quadraticCurveTo(cx, cy, ex, ey); ctx.stroke();
+    ctx.restore();
+    // 粒：買い越しの年は細胞→中心（日本へ入る）、売り越しの年は中心→外
+    const n = Math.round(r / 9);
+    for (let k = 0; k < n; k++) {
+      let p = ((t * 0.35 + k / n + c.seed) % 1);
+      if (c.neg) p = 1 - p;
+      const q = 1 - p; // 0=中心, 1=細胞
+      const bx = q * q * sx + 2 * q * p * cx + p * p * ex, by = q * q * sy + 2 * q * p * cy + p * p * ey;
+      const k2 = 1 - p; // 曲線上：p=0 で中心 → 細胞へ向かう向き
+      const px = k2 * k2 * ex + 2 * k2 * p * cx + p * p * sx, py = k2 * k2 * ey + 2 * k2 * p * cy + p * p * sy;
+      ctx.fillStyle = hexA(color, 0.85 * a * Math.sin(Math.PI * p));
+      ctx.beginPath(); ctx.arc(px, py, 2.6, 0, 7); ctx.fill();
+    }
+  }
+}
+
+function drawCells(t, tint) {
+  for (const c of CELLS) {
+    const r = cellRadius(c, t); if (r < 0.5) continue;
+    const a = focusAlpha(c, t);
+    const hl = (c.year === 2025 && (win(t, T.yenFocus, T.insight + 0.3, 0.6))) ||
+               (c.year === 2011 && win(t, T.usdFocus, T.insight + 0.3, 0.6));
+    ctx.save(); ctx.globalAlpha = a;
+    if (hl) { ctx.shadowColor = tint; ctx.shadowBlur = 28 + 10 * Math.sin(t * 4); }
+    blob(c.x, c.y, r, t, c.seed);
+    if (c.neg) {
+      ctx.strokeStyle = COL.out; ctx.lineWidth = 3; ctx.setLineDash([5, 5]); ctx.stroke();
+    } else {
+      const g = ctx.createRadialGradient(c.x - r * .3, c.y - r * .35, r * .1, c.x, c.y, r * 1.05);
+      g.addColorStop(0, hexA(mixHex(tint, '#ffffff', 0.35), 0.95));
+      g.addColorStop(1, hexA(tint, 0.75));
+      ctx.fillStyle = g; ctx.fill();
+      if (hl) { ctx.shadowBlur = 0; ctx.lineWidth = 3; ctx.strokeStyle = '#ffffff'; ctx.stroke(); }
+    }
+    ctx.restore();
+    // 年のラベル
+    const inside = !c.neg && r > 26;
+    const lx = inside ? c.x : c.x + Math.cos(c.ang) * (r + 20);
+    const ly = inside ? c.y : c.y + Math.sin(c.ang) * (r + 20);
+    text(String(c.year).slice(2), lx, ly, inside ? 22 : 18, inside ? '#10161d' : COL.sub, inside ? 700 : 400, 'center',
+         a * ramp(t, T.sprout[0] + c.i * 0.09 + 0.4, T.sprout[0] + c.i * 0.09 + 0.9));
+  }
+}
+
+function drawNucleus(t, tint, appear) {
+  ctx.save(); ctx.globalAlpha = appear;
+  const pulse = 1 + 0.04 * Math.sin(t * 2.2);
+  ctx.shadowColor = tint; ctx.shadowBlur = 24;
+  blob(DISH.x, DISH.y, NUCLEUS_R * pulse, t * 0.7, 3.3);
+  ctx.fillStyle = '#1b2633'; ctx.fill();
+  ctx.shadowBlur = 0; ctx.lineWidth = 2.5; ctx.strokeStyle = hexA(tint, 0.9); ctx.stroke();
+  ctx.restore();
+  text('日本', DISH.x, DISH.y, 30, COL.text, 700, 'center', appear);
+}
+
+function drawLensPill(t, tint, appear) {
+  const k = ramp(t, ...T.lens);
+  const y = DISH.y - DISH.r - 2;
+  ctx.save(); ctx.globalAlpha = appear;
+  ctx.fillStyle = COL.bg; ctx.strokeStyle = tint; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.roundRect(DISH.x - 120, y - 28, 240, 56, 28); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  text('¥  円目線', DISH.x, y + 1, 30, COL.yen, 700, 'center', appear * clamp(1 - 2 * k));
+  text('$  ドル目線', DISH.x, y + 1, 30, COL.usd, 700, 'center', appear * clamp(2 * k - 1));
+}
+
+function drawHeader(t) {
+  // 0〜3秒：問い
+  const h0 = 1 - ramp(t, 3.0, 3.5);
+  text('海外の投資家が、日本の証券を買い越した額（2005年以降）', W / 2, 78, 36, COL.sub, 400, 'center', ramp(t, 0.1, 0.6) * h0);
+  text('2025年は、過去最大だった。', W / 2, 142, 64, COL.text, 700, 'center', ramp(t, 0.4, 0.9) * h0);
+  text('── 円で見れば。', W / 2, 206, 40, COL.yen, 700, 'center', ramp(t, T.hookTail, T.hookTail + 0.4) * h0);
+
+  // 3〜12秒：円目線
+  const h1 = win(t, 3.3, T.lens[0] + 0.2, 0.5);
+  text('円で見ると、', W / 2, 100, 40, COL.yen, 400, 'center', h1);
+  text('2025年がいちばん大きい。', W / 2, 168, 60, COL.text, 700, 'center', h1);
+
+  // 12〜14.6秒：切り替え
+  const h2 = win(t, T.lens[0], T.usdFocus, 0.4);
+  text('でも、ドルで見ると──', W / 2, 140, 60, COL.usd, 700, 'center', h2);
+
+  // 15〜22秒：ドル目線
+  const h3 = win(t, T.usdFocus, T.insight + 0.2, 0.5);
+  text('ドルで見ると、最大は2011年。', W / 2, 100, 44, COL.usd, 700, 'center', h3);
+  text('2025年は、その約6割。', W / 2, 168, 60, COL.text, 700, 'center', h3);
+
+  // 22〜27秒：気づき
+  const h4 = win(t, T.insight, T.end + 0.2, 0.5);
+  text('同じお金でも、', W / 2, 100, 46, COL.sub, 400, 'center', h4);
+  text('ものさしで、大きさが変わる。', W / 2, 170, 60, COL.text, 700, 'center', h4);
+}
+
+function drawFooter(t) {
+  const y25 = DATA.years.find(y => y.year === 2025), y11 = DATA.years.find(y => y.year === 2011);
+  const f1 = win(t, T.yenFocus, T.lens[0] + 0.2, 0.5);
+  text(`2025年　${fmtCho(y25.jpy_trillion)}`, W / 2, 1172, 52, COL.yen, 700, 'center', f1);
+  text('1年間の買い越し額（2005〜2025年）。点線の輪は売り越しの年', W / 2, 1230, 24, COL.sub, 400, 'center', f1);
+
+  const f2 = win(t, T.usdFocus, T.insight + 0.2, 0.5);
+  text(`2011年　${fmtOkuUsd(y11.usd_billion)}`, W / 2, 1160, 44, COL.usd, 700, 'center', f2);
+  text(`2025年　${fmtOkuUsd(y25.usd_billion)}`, W / 2, 1218, 44, COL.text, 700, 'center', f2);
+
+  const f3 = win(t, T.insight + 0.3, T.end + 0.2, 0.5);
+  text(`1ドル＝ 2011年 約${Math.round(y11.avg_jpy_per_usd)}円　→　2025年 約${Math.round(y25.avg_jpy_per_usd)}円`,
+       W / 2, 1172, 40, COL.text, 700, 'center', f3);
+  text('（その年の平均。ECB参照レートから計算）', W / 2, 1226, 24, COL.sub, 400, 'center', f3);
+
+  // 出典：最初から最後まで小さく出す
+  const fs = ramp(t, 0.3, 1.0);
+  text('出典：財務省「対外及び対内証券売買契約等の状況（週次・指定報告機関ベース）」、ECB参照レート を加工して作成', W / 2, 1290, 19, COL.sub, 400, 'center', fs);
+  text('非居住者による日本の証券（株式・債券）の取得超。ドル換算は週平均レートによるMABUIの計算', W / 2, 1318, 19, COL.sub, 400, 'center', fs);
+}
+
+function drawEndCard(t) {
+  const e = ramp(t, T.end, T.end + 0.8);
+  if (e <= 0) return;
+  ctx.save(); ctx.globalAlpha = e * 0.86; ctx.fillStyle = COL.bg; ctx.fillRect(0, 0, W, 1265); ctx.restore();
+  text('MABUI', W / 2, 620, 120, COL.text, 700, 'center', e);
+  text('見えざる手を、見る。', W / 2, 740, 48, COL.text, 400, 'center', ramp(t, T.end + 0.4, T.end + 1.2));
+}
+
+function renderAt(t) {
+  if (!DATA) throw new Error('setData() を先に呼ぶ');
+  const tint = mixHex(COL.yen, COL.usd, ramp(t, ...T.lens));
+  const appear = ramp(t, 0, 0.6);
+  ctx.fillStyle = COL.bg; ctx.fillRect(0, 0, W, H);
+  drawDish(t, tint, appear);
+  drawTentaclesAndFlow(t, tint, appear);
+  drawCells(t, tint);
+  drawNucleus(t, tint, appear);
+  drawLensPill(t, tint, appear);
+  drawHeader(t);
+  drawFooter(t);
+  drawEndCard(t);
+}
+
+window.setData = setData;
+window.renderAt = renderAt;
+window.DURATION = DURATION;
+</script>
+</body>
+</html>
