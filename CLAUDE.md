@@ -45,7 +45,11 @@
 - 動画の試作：`video/`（Playwright でコマを描き ffmpeg で MP4）。`render.mjs` は PAGE/DATA/NAME の環境変数で切替。
   - 年ごとの丸を円形に並べた30秒版（inward_lens）は「何の動画か分からない」と不評 → 作り直し方針はメモリ参照。
   - 群れの試作（swarm_test）、厚みの地図の試作（holdings_map：円で+33%／ドルで−3%、2021→2025年末）。
-- 国別の「流れ」の公的データ：対内証券投資の国別フローは日本の統計に無い。直接投資は国別フローあり（四半期）。
+- 国別の「流れ」の公的データ：対内証券投資の国別フローは日本の統計に無い。
+- 直接投資（国別・業種別・年次 2020〜2025、PDL）：`scripts/mof_fdi_by_country.py`、`sources/mof_fdi_by_country.md`。
+  中国への投資が細り、2023年にインドが上回った（2025年 中国0.23兆円／インド1.14兆円）。流れの地図の試作 `video/fdi_flow_test.html`。
+  月次・2014年〜は日本銀行 API（BP01 の BPBP6H*/BPBP6I*）にあるが、利用条件（商用は要相談・無断改変不可・公開時連絡）を確認中。
+- 国名→ISO3 は共通の `scripts/countries.py`。
 - 定期実行：`.github/workflows/fetch-data.yml`。
 - GitHub：公開リポジトリ https://github.com/ashita-kara/mabui （アカウント ashita-kara）。
   ma-san-do は過去のアカウントで使わない（この Mac の SSH 鍵は ma-san-do のもの）。push は gh の認証（HTTPS）。
