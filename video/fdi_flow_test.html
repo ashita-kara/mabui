@@ -24,6 +24,11 @@ const T0 = 1.2, YEAR_LEN = 2.3, FLIGHT = 1.5;   // 1年＝2.3秒、粒の飛行�
 let D = null;
 const SHORT = { CHN: '中国', USA: 'アメリカ', GBR: '英国', KOR: '韓国', ZAF: '南アフリカ' };
 const FOCUS = new Set(['CHN', 'IND']);
+// 名前の置き場所（画面座標）。光の流れと重ならない場所に固定
+const LABELS = [
+  ['CHN', 600, 585], ['IND', 440, 800], ['SGP', 690, 870], ['AUS', 960, 905],
+  ['USA', 1560, 725], ['GBR', 60, 520], ['NLD', 250, 520],
+];
 const clamp = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
 const ease = k => { k = clamp(k); return k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
 const ramp = (t, a, b) => ease((t - a) / (b - a));
@@ -110,20 +115,22 @@ function renderAt(t) {
   ctx.beginPath(); ctx.ellipse(D.jx, D.jy, 16, 10, 0, 0, 7); ctx.stroke(); ctx.restore();
   text('日本', D.jx, D.jy + 30, 22, TEXT, 700, 'center', appear);
 
-  // その年の上位の国と、中国・インドのラベル
+  // 名前を出す国と置き場所は固定（年によって動かさない）。細い線で国の点とつなぐ
   const k = yearIndexAt(t), y = D.years[k], la = appear * ramp(t, T0, T0 + 0.6);
-  const pick = new Set(['CHN', 'IND']);
-  [...D.countries].filter(c => c.net_oku[y] != null).sort((a, b) => Math.abs(b.net_oku[y]) - Math.abs(a.net_oku[y]))
-    .slice(0, 5).forEach(c => pick.add(c.iso3));
-  const placed = [];
-  for (const c of D.countries.filter(c => pick.has(c.iso3))) {
-    const v = c.net_oku[y]; if (v == null) continue;
-    let lx = c.x + 12, ly = c.y + 26;
-    for (let g = 0; g < 30 && placed.some(q => lx < q.x + 200 && lx + 200 > q.x && Math.abs(ly - q.y) < 46); g++) ly += 46;
-    placed.push({ x: lx, y: ly });
-    const hl = c.iso3 === 'CHN' || c.iso3 === 'IND';
-    text(SHORT[c.iso3] || c.name_ja, lx, ly, hl ? 22 : 19, TEXT, 700, 'left', la * (hl ? 1 : 0.7));
-    text(fmt(v), lx, ly + 22, hl ? 20 : 17, v >= 0 ? `rgb(${OUT})` : `rgb(${BACK})`, 700, 'left', la * (hl ? 1 : 0.7));
+  for (const [iso, lx, ly] of LABELS) {
+    const c = D.countries.find(c => c.iso3 === iso); if (!c) continue;
+    const v = c.net_oku[y], hl = FOCUS.has(iso), a = la * (hl ? 1 : 0.75);
+    ctx.save(); ctx.globalAlpha = 0.6 * a; ctx.strokeStyle = SUB; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(c.x, c.y, 5, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(lx, ly); ctx.stroke(); ctx.restore();
+    const name = SHORT[iso] || c.name_ja;
+    const val = v == null ? '非公表' : fmt(v) + (v < 0 ? '（回収が上回る）' : '');
+    ctx.font = `700 ${hl ? 22 : 18}px ${FONT}`;
+    const w = Math.max(ctx.measureText(name).width, ctx.measureText(val).width) + 16;
+    ctx.save(); ctx.globalAlpha = 0.7 * a; ctx.fillStyle = BG;
+    ctx.beginPath(); ctx.roundRect(lx - 8, ly - 16, w, hl ? 54 : 48, 6); ctx.fill(); ctx.restore();
+    text(name, lx, ly, hl ? 22 : 18, TEXT, 700, 'left', a);
+    text(val, lx, ly + (hl ? 24 : 21), hl ? 20 : 16, v == null ? SUB : v >= 0 ? `rgb(${OUT})` : `rgb(${BACK})`, 700, 'left', a);
   }
 
   // 見出し
