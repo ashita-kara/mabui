@@ -17,14 +17,15 @@
   },
   "built_from_snapshots": [
     "20261115T082523Z_exr_full.csv",
-    "20261117T004256Z_exr_window.csv"
+    "20261117T004256Z_exr_window.csv",
+    "20261117T234725Z_exr_window.csv"
   ],
-  "latest_retrieved_at": "2026-11-17T00:42:56Z",
-  "days": 7199,
+  "latest_retrieved_at": "2026-11-17T23:47:25Z",
+  "days": 7200,
   "first_date": "1999-01-04",
-  "last_date": "2026-11-16",
+  "last_date": "2026-11-17",
   "obs_status_counts": {
-    "A": 14274,
+    "A": 14276,
     "H": 124
   },
   "dates_without_value": [
