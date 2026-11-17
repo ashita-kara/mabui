@@ -16,14 +16,15 @@
     "jpy_per_usd_mabui_calc": "JPY per 1 USD = jpy_per_eur / usd_per_eur, rounded to 4 decimals (MABUI calculation, NOT an ECB statistic)"
   },
   "built_from_snapshots": [
-    "20261115T082523Z_exr_full.csv"
+    "20261115T082523Z_exr_full.csv",
+    "20261117T004256Z_exr_window.csv"
   ],
-  "latest_retrieved_at": "2026-11-15T08:25:23Z",
-  "days": 7198,
+  "latest_retrieved_at": "2026-11-17T00:42:56Z",
+  "days": 7199,
   "first_date": "1999-01-04",
-  "last_date": "2026-11-13",
+  "last_date": "2026-11-16",
   "obs_status_counts": {
-    "A": 14272,
+    "A": 14274,
     "H": 124
   },
   "dates_without_value": [

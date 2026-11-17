@@ -1,0 +1,13 @@
+{
+  "source_id": "ecb_exr_daily",
+  "file": "20261117T004256Z_exr_window.csv",
+  "retrieved_at": "2026-11-17T00:42:56Z",
+  "sha256": "334297e24e160404085e7c60956607eee47c86560f2c991d15ff87085868ccb2",
+  "bytes": 13404,
+  "url": "https://data-api.ecb.europa.eu/service/data/EXR/D.JPY+USD.EUR.SP00.A?format=csvdata&startPeriod=2026-10-03",
+  "http_last_modified": "Mon, 16 Nov 2026 14:57:07 GMT",
+  "http_content_type": "text/csv",
+  "encoding": "utf-8",
+  "mode": "window",
+  "start_period": "2026-10-03"
+}
