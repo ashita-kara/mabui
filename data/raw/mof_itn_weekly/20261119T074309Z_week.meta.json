@@ -1,0 +1,12 @@
+{
+  "source_id": "mof_itn_weekly",
+  "file": "20261119T074309Z_week.csv",
+  "retrieved_at": "2026-11-19T07:43:09Z",
+  "sha256": "a296ed25f3ab25e2329676388a5698eed6538d422a1bc4045c58c9d4d2d0534e",
+  "bytes": 257792,
+  "url": "https://www.mof.go.jp/policy/international_policy/reference/itn_transactions_in_securities/week.csv",
+  "http_last_modified": "Wed, 18 Nov 2026 22:50:14 GMT",
+  "http_content_type": "text/csv",
+  "encoding": "cp932",
+  "publisher_final_update": "令和8年11月19日"
+}
