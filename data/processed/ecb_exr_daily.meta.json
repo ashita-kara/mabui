@@ -21,14 +21,15 @@
     "20261117T234725Z_exr_window.csv",
     "20261118T231934Z_exr_window.csv",
     "20261119T232721Z_exr_window.csv",
-    "20261120T225959Z_exr_window.csv"
+    "20261120T225959Z_exr_window.csv",
+    "20261124T031242Z_exr_window.csv"
   ],
-  "latest_retrieved_at": "2026-11-20T22:59:59Z",
-  "days": 7203,
+  "latest_retrieved_at": "2026-11-24T03:12:42Z",
+  "days": 7204,
   "first_date": "1999-01-04",
-  "last_date": "2026-11-20",
+  "last_date": "2026-11-23",
   "obs_status_counts": {
-    "A": 14282,
+    "A": 14284,
     "H": 124
   },
   "dates_without_value": [
